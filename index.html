@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trail-1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="w-screen ">
+        <div class="parent relative top-0 left-0 w-screen h-[700vh] ">
+            <div class="w-full sticky top-0 left-0 h-screen">
+            
+                <Nav class="absolute top-10 left-[30%] md:left-[45%]">
+                    <ul class=" flex justify-evenly">
+                        <li class="mr-10">Home</li>
+                        <li class="mr-10">About</li>
+                        <li class="mr-10">Services</li>
+                    </ul>
+                </Nav>
+                <canvas class="w-screen h-screen" id="frame"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const frames = {
+            currentIndex: 0,
+            MaxIndex: 382
+        };
+    
+        let imageLoaded = 0;
+        const images = [];
+        const canvas = document.getElementById("frame");
+        const context = canvas.getContext("2d");
+        
+        
+        function preloadImages() {
+            for (let i = 1; i <= frames.MaxIndex; i++) {
+                const imgUrl = `https://idoxaky.sufydely.com/frame_${i.toString().padStart(4, "0")}.png`;
+                const img = new Image();
+                img.src = imgUrl;
+    
+                img.onload = () => {
+                    imageLoaded++;
+                    if (imageLoaded === frames.MaxIndex) {
+                        loadImage(frames.currentIndex);
+                        startAnimation();
+                    }
+                };
+    
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${imgUrl}`);
+                };
+    
+                images.push(img);
+            }
+        }
+    
+        function loadImage(index) {
+            if (index >= 0 && index < frames.MaxIndex) {
+                const img = images[index];
+    
+                // Adjust canvas size to match window dimensions
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+    
+                // Calculate scaling
+                const scaleX = canvas.width / img.width;
+                const scaleY = canvas.height / img.height;
+                const scale = Math.max(scaleX, scaleY);
+    
+                const newWidth = img.width * scale;
+                const newHeight = img.height * scale;
+    
+                // Center the image
+                const offsetX = (canvas.width - newWidth) / 2;
+                const offsetY = (canvas.height - newHeight) / 2;
+    
+                // Draw the image on the canvas
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = "high";
+                context.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+    
+                frames.currentIndex = index;
+            }
+        }
+    
+        function startAnimation() {
+            if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
+                console.error("GSAP or ScrollTrigger is not loaded.");
+                return;
+            }
+    
+            gsap.registerPlugin(ScrollTrigger);
+    
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: ".parent", // Make sure this selector exists
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 2,
+                    // Set to `false` to hide markers in production
+                }
+            });
+    
+            tl.to(frames, {
+                currentIndex: frames.MaxIndex,
+                onUpdate: function () {
+                    const currentFrame = Math.floor(frames.currentIndex);
+                    loadImage(currentFrame)
+                },
+                // Keeps the animation linear
+            });
+        }
+    
+        // Start preloading images
+        preloadImages();
+    </script>
+     
+    
+</body>
+</html>
